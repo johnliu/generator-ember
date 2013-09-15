@@ -1,0 +1,66 @@
+/* Library Mixins, Styles and Base CSS
+ * author: John Liu
+ * version: 0.0.1
+ */
+
+/* Functions and Mixins
+ */
+
+responsive-sm-width = 38em
+responsive-md-width = 54em
+
+responsive-property(prop, sm, md, lg) {
+  @media only screen {
+    {prop}: lg;
+  }
+
+  @media only screen and (max-width: 54em) {
+    {prop}: md;
+  }
+
+  @media only screen and (max-width: 38em) {
+    {prop}: sm;
+  }
+}
+
+responsive(prop, sm, md, lg) {
+  if (md and lg) {
+    responsive-property: prop, sm, md, lg;
+  } else {
+    {prop}: sm;
+  }
+}
+
+font-size(sm, md = null, lg = null) {
+  responsive: 'font-size', sm, md, lg;
+}
+
+anti-aliasing(red-component = 255, blue-component = 255, green-component = 255, radius = 0.15) {
+  -webkit-font-smoothing: antialiased;
+  text-shadow: 0 1px 1px rgba(red-component, blue-component, green-component, radius);
+}
+
+/* Grid System (Dead Simple Grid)
+ */
+
+.col {
+  float: left;
+  width: 100%;
+  padding: 0 0;
+  box-sizing: border-box;
+}
+
+.row {
+  .row {
+    margin: 0 0;
+  }
+
+  &:before {
+    content: '';
+  }
+
+  &:after {
+    content: '';
+    clear: both;
+  }
+}

@@ -5,12 +5,10 @@ var yeoman = require('yeoman-generator');
 
 var EmberGenerator = module.exports = function EmberGenerator(args, options) {
   yeoman.generators.Base.apply(this, arguments);
-  
+
   if (this.appname.match(/^[Ee]mber$/)) {
     this.appname += '_app';
   }
-
-  this.hookFor('ember:router');
 
   // setup the test-framework property, Gruntfile template will need this
   this.testFramework = options['test-framework'] || 'mocha';
@@ -19,9 +17,6 @@ var EmberGenerator = module.exports = function EmberGenerator(args, options) {
   if (!options['test-framework']) {
     options['test-framework'] = 'mocha';
   }
-
-  // hook for CoffeeScript
-  this.options.coffee = options.coffee;
 
   // hook for karma test runner
   this.options.karma = options.karma;
@@ -37,10 +32,9 @@ var EmberGenerator = module.exports = function EmberGenerator(args, options) {
     'bower_components/jquery/jquery.js',
     'bower_components/handlebars/handlebars.runtime.js',
     'bower_components/ember/ember.js',
-    'bower_components/ember-data-shim/ember-data.js'
   ];
 
-  this.on('end', function () {
+  this.on('end', function() {
     this.installDependencies({ skipInstall: options['skip-install'] });
   });
 };
@@ -48,7 +42,7 @@ var EmberGenerator = module.exports = function EmberGenerator(args, options) {
 util.inherits(EmberGenerator, yeoman.generators.Base);
 
 EmberGenerator.prototype._getJSPath = function _getJSPath(file) {
-  return file + (this.options.coffee ? '.coffee' : '.js');
+  return file + '.js';
 };
 
 EmberGenerator.prototype.welcome = function welcome() {
@@ -59,16 +53,8 @@ EmberGenerator.prototype.welcome = function welcome() {
 EmberGenerator.prototype.askFor = function askFor() {
   var cb = this.async();
 
-  var prompts = [{
-    type: 'confirm',
-    name: 'compassBootstrap',
-    message: 'Would you like to include Twitter Bootstrap for Sass?',
-    default: true
-  }];
-
+  var prompts = [];
   this.prompt(prompts, function (props) {
-    this.compassBootstrap = props.compassBootstrap;
-
     cb();
   }.bind(this));
 };
@@ -82,6 +68,8 @@ EmberGenerator.prototype.createDirLayout = function createDirLayout() {
   this.mkdir('app/scripts/controllers');
   this.mkdir('app/scripts/routes');
   this.mkdir('app/scripts/views');
+  this.mkdir('app/scripts/components');
+  this.mkdir('app/scripts/helpers');
 };
 
 EmberGenerator.prototype.git = function git() {
@@ -129,14 +117,11 @@ EmberGenerator.prototype.templates = function templates() {
 
 EmberGenerator.prototype.writeIndex = function writeIndex() {
   var mainCssFiles = [];
-  if (this.compassBootstrap) {
-    mainCssFiles.push('styles/style.css');
-  } else {
-    mainCssFiles.push('styles/normalize.css');
-    mainCssFiles.push('styles/style.css');
-  }
+  mainCssFiles.push('styles/normalize.css');
+  mainCssFiles.push('styles/lib.css');
+  mainCssFiles.push('styles/core.css');
 
-  this.indexFile = this.appendStyles(this.indexFile, 'styles/main.css', mainCssFiles);
+  this.indexFile = this.appendFiles(this.indexFile, 'css', 'styles/main.css', mainCssFiles, null, '.tmp');
 
   this.indexFile = this.appendScripts(this.indexFile, 'scripts/components.js', this.bowerScripts);
 
@@ -144,39 +129,14 @@ EmberGenerator.prototype.writeIndex = function writeIndex() {
   this.indexFile = this.appendFiles(this.indexFile, 'js', 'scripts/main.js', ['scripts/combined-scripts.js'], null, '.tmp');
 };
 
-EmberGenerator.prototype.bootstrapJavaScript = function bootstrapJavaScript() {
-  if (!this.compassBootstrap) {
-    return;  // Skip if disabled.
-  }
-  // Wire Twitter Bootstrap plugins
-  this.indexFile = this.appendScripts(this.indexFile, 'scripts/plugins.js', [
-    'bower_components/bootstrap-sass/js/bootstrap-affix.js',
-    'bower_components/bootstrap-sass/js/bootstrap-alert.js',
-    'bower_components/bootstrap-sass/js/bootstrap-dropdown.js',
-    'bower_components/bootstrap-sass/js/bootstrap-tooltip.js',
-    'bower_components/bootstrap-sass/js/bootstrap-modal.js',
-    'bower_components/bootstrap-sass/js/bootstrap-transition.js',
-    'bower_components/bootstrap-sass/js/bootstrap-button.js',
-    'bower_components/bootstrap-sass/js/bootstrap-popover.js',
-    'bower_components/bootstrap-sass/js/bootstrap-typeahead.js',
-    'bower_components/bootstrap-sass/js/bootstrap-carousel.js',
-    'bower_components/bootstrap-sass/js/bootstrap-scrollspy.js',
-    'bower_components/bootstrap-sass/js/bootstrap-collapse.js',
-    'bower_components/bootstrap-sass/js/bootstrap-tab.js'
-  ]);
-};
-
 EmberGenerator.prototype.all = function all() {
   this.write('app/index.html', this.indexFile);
 
-  if (this.compassBootstrap) {
-    this.copy('styles/style_bootstrap.scss', 'app/styles/style.scss');
-  } else {
-    this.copy('styles/normalize.css', 'app/styles/normalize.css');
-    this.copy('styles/style.css', 'app/styles/style.css');
-  }
+  this.copy('styles/normalize.styl', 'app/styles/normalize.styl');
+  this.copy('styles/lib.styl', 'app/styles/lib.styl');
+  this.copy('styles/core.styl', 'app/styles/core.styl');
 
   this.copy(this._getJSPath('scripts/app'), this._getJSPath('app/scripts/app'));
-  this.copy(this._getJSPath('scripts/store'), this._getJSPath('app/scripts/store'));
+  this.copy(this._getJSPath('scripts/router'), this._getJSPath('app/scripts/router'));
   this.copy(this._getJSPath('scripts/routes/application_route'), this._getJSPath('app/scripts/routes/application_route'));
 };
